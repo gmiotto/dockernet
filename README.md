@@ -5,13 +5,27 @@ Dockernet
 
 ### Use Docker containers as hosts inside your Mininet topologies. Interact with the containers through Mininet's CLI.
 
-This fork of Mininet allows to use Docker containers as Mininet hosts. This enables interesting functionalities to built networking/cloud testbeds. The integration is done subclassing the original Host class.
-
-
-* WIP! Not fully functional yet.
-* Contributions welcome :)
+This fork of Mininet allows to use Docker containers as Mininet hosts. This enables interesting functionalities to built networking/cloud testbeds. The integration is done by subclassing the original Host class.
 
 Based on: Mininet 2.2.1
+
+* WIP! Not fully functional yet.
+* Contributions welcome :-)
+
+
+### Features
+
+* Add, remove Docker containers to Mininet topologies
+* Connect Docker containers to topology (to switches, other containers, or legacy Mininet hosts )
+* Execute commands inside Docker containers by using the Mininet CLI 
+* Dynamic topology changes (lets behave like a small cloud ;-) )
+ * Add Hosts/Docker containers to a *running* Mininet topology
+ * Connect Hosts/Docker containers to a *running* Mininet topology
+ * Remove Hosts/Docker containers/Links from a *running* Mininet topology
+* Traffic control links (delay, bw, loss, jitter)
+ * (missing: TCLink support for dynamically added containers/hosts)
+* Automated unit tests for all new features
+* Automated installation based on Ansible playbook
 
 ### Dependencies
 
@@ -45,12 +59,6 @@ There is a set of Dockernet specific unit tests located in `mininet/test/test_do
 
 ### TODOs
 * see Wiki: https://github.com/mpeuster/dockernet/wiki/Dockernet-TODO
-
-### Working features
-
-* Container add, remove
-* Connect containers to topology
-* Execute Mininet CLI commands inside container
 
 ### Credits
 Dockernet (c) 2015 by Manuel Peuster
