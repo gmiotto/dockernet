@@ -266,6 +266,29 @@ def dumpNodeConnections( nodes ):
         dumpConnections( node )
         output( '\n' )
 
+def dumpNodeConnections2( nodes ):
+    "Dump connections to/from nodes."
+
+    def dumpConnections2( node ):
+        "Helper function: dump connections to node"
+        _output = ""
+        for intf in node.intfList():
+            _output += ' %s:' % intf 
+            if intf.link:
+                intfs = [ intf.link.intf1, intf.link.intf2 ]
+                intfs.remove( intf )
+                _output += str(intfs[ 0 ])
+            else:
+                _output += ' ' 
+        return _output
+
+    routput = ""
+    for node in nodes:
+        routput += node.name 
+        routput += dumpConnections2( node )
+        routput += '\n' 
+    return routput
+
 def dumpNetConnections( net ):
     "Dump connections in network"
     nodes = net.controllers + net.switches + net.hosts
