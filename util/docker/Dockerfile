@@ -1,28 +1,32 @@
-FROM ubuntu:14.04
+FROM ubuntu:trusty
+MAINTAINER manuel@peuster.de
 
 RUN apt-get update \
     && apt-get install -y software-properties-common apt-transport-https ca-certificates wget \
     && apt-add-repository ppa:ansible/ansible \
     && apt-get update \
-    && apt-get install -y ansible git \
-    && wget --no-verbose https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 -O /usr/bin/docker \
+    && apt-get install -y ansible git curl python-pip \
+    && curl -fsSL https://get.docker.com/gpg | apt-key add - \
+    && curl -fsSL https://get.docker.com/ | sh \
     && chmod +x /usr/bin/docker \
+    && pip install -U setuptools \
+    && pip install -U pytest \
+    && pip install -U urllib3 \
+    && pip install -U docker-py \
     && echo 'Done'
 
-WORKDIR /dockernet
+WORKDIR /containernet
 
-COPY . /dockernet/
+COPY . /containernet/
 
 RUN sed -i 's@git://@https://@g' util/install.sh \
     && echo 'localhost ansible_connection=local' >> /etc/ansible/hosts \
-    && cd /dockernet/ansible \
-    && ansible-playbook _build.install.yml \
-    && cd /dockernet \
+    && cd /containernet \
     && cp util/install.sh /tmp/install.sh \
     && cat /tmp/install.sh | awk 'NR==1{print; print "set -x"} NR!=1' > util/install.sh \
     && mkdir -p util/_deps \
     && util/install.sh -s util/_deps -fnv \
-    && python setup.py install \
+    && make develop \
     && echo 'Done'
 
 ENTRYPOINT ["util/docker/entrypoint.sh"]

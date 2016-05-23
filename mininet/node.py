@@ -722,7 +722,7 @@ class Docker ( Host ):
             #network_disabled=True,  # docker stats breaks if we disable the default network
             host_config=hc,
             cpuset=self.cpuset,
-            labels=['com.dockernet'],
+            labels=['com.containernet'],
         )
         # start the container
         self.dcli.start(self.dc)
@@ -1315,7 +1315,7 @@ class OVSSwitch( Switch ):
                   inband=False, protocols=None,
                   reconnectms=1000, stp=False, batch=False, **params ):
         """name: name for switch
-           failMode: controller loss behavior (secure|open)
+           failMode: controller loss behavior (secure|standalone)
            datapath: userspace or kernel mode (kernel|user)
            inband: use in-band control (False)
            protocols: use specific OpenFlow version(s) (e.g. OpenFlow13)

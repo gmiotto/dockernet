@@ -16,7 +16,7 @@ modname = distname = 'mininet'
 
 setup(
     name=distname,
-    version=VERSION,
+    version=VERSION.replace("d", ""),
     description='Process-based OpenFlow emulator',
     author='Bob Lantz',
     author_email='rlantz@cs.stanford.edu',
@@ -37,7 +37,10 @@ setup(
     keywords='networking emulator protocol Internet OpenFlow SDN',
     license='BSD',
     install_requires=[
-        'setuptools'
+        'setuptools',
+        'urllib3',
+        'docker-py==1.7.1',
+        'pytest'
     ],
     scripts=scripts,
 )

@@ -3,7 +3,7 @@ import os
 import time
 import subprocess
 import docker
-from mininet.net import Dockernet
+from mininet.net import Containernet
 from mininet.node import Host, Controller, OVSSwitch, Docker
 from mininet.link import TCLink
 from mininet.topo import SingleSwitchTopo, LinearTopo
@@ -34,7 +34,7 @@ class simpleTestTopology( unittest.TestCase ):
         Creates a Mininet instance and automatically adds some
         nodes to it.
         """
-        self.net = Dockernet( controller=Controller )
+        self.net = Containernet( controller=Controller )
         self.net.addController( 'c0' )
 
         # add some switches
@@ -76,14 +76,20 @@ class simpleTestTopology( unittest.TestCase ):
         # make sure that all pending docker containers are killed
         with open(os.devnull, 'w') as devnull:
             subprocess.call(
-                "sudo docker rm -f $(sudo docker ps -a -q)",
+                "docker rm -f $(docker ps --filter 'label=com.containernet' -a -q)",
                 stdout=devnull,
                 stderr=devnull,
                 shell=True)
 
+    def getContainernetContainers(self):
+        """
+        List the containers managed by containernet
+        """
+        return self.getDockerCli().containers(filters={"label": "com.containernet"})
+
 
 #@unittest.skip("disabled connectivity tests for development")
-class testDockernetConnectivity( simpleTestTopology ):
+class testContainernetConnectivity( simpleTestTopology ):
     """
     Tests to check connectivity of Docker containers within
     the emulated network.
@@ -100,7 +106,7 @@ class testDockernetConnectivity( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 1)
+        self.assertTrue(len(self.getContainernetContainers()) == 1)
         self.assertTrue(len(self.net.hosts) == 2)
         # check connectivity by using ping
         self.assertTrue(self.net.pingAll() <= 0.0)
@@ -118,7 +124,7 @@ class testDockernetConnectivity( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 2)
+        self.assertTrue(len(self.getContainernetContainers()) == 2)
         self.assertTrue(len(self.net.hosts) == 2)
         # check connectivity by using ping
         self.assertTrue(self.net.pingAll() <= 0.0)
@@ -137,7 +143,7 @@ class testDockernetConnectivity( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 1)
+        self.assertTrue(len(self.getContainernetContainers()) == 1)
         self.assertTrue(len(self.net.hosts) == 2)
         # check connectivity by using ping
         self.assertTrue(self.net.pingAll() <= 0.0)
@@ -156,7 +162,7 @@ class testDockernetConnectivity( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 2)
+        self.assertTrue(len(self.getContainernetContainers()) == 2)
         self.assertTrue(len(self.net.hosts) == 2)
         # check connectivity by using ping
         self.assertTrue(self.net.pingAll() <= 0.0)
@@ -185,7 +191,7 @@ class testDockernetConnectivity( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 3)
+        self.assertTrue(len(self.getContainernetContainers()) == 3)
         self.assertTrue(len(self.net.hosts) == 3)
         # check connectivity by using ping
         self.assertTrue(self.net.ping([self.d[0], self.d[1]]) <= 0.0)
@@ -196,7 +202,7 @@ class testDockernetConnectivity( simpleTestTopology ):
 
 
 #@unittest.skip("disabled command execution tests for development")
-class testDockernetContainerCommandExecution( simpleTestTopology ):
+class testContainernetContainerCommandExecution( simpleTestTopology ):
     """
     Test to check the command execution inside Docker containers by
     using the Mininet API.
@@ -215,7 +221,7 @@ class testDockernetContainerCommandExecution( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 1)
+        self.assertTrue(len(self.getContainernetContainers()) == 1)
         self.assertTrue("etc" in self.d[0].cmd("ls"))
         self.assertTrue("d0-eth0" in self.d[0].cmd("ifconfig -a"))
         self.assertTrue("0%" in self.d[0].cmd("ping 127.0.0.1 -c 3"))
@@ -224,7 +230,7 @@ class testDockernetContainerCommandExecution( simpleTestTopology ):
 
 
 #@unittest.skip("disabled dynamic topology tests for development")
-class testDockernetDynamicTopologies( simpleTestTopology ):
+class testContainernetDynamicTopologies( simpleTestTopology ):
     """
     Tests to check dynamic topology support which allows to add
     and remove containers to/from a running Mininet network instance.
@@ -242,13 +248,13 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 1)
+        self.assertTrue(len(self.getContainernetContainers()) == 1)
         self.assertTrue(len(self.net.hosts) == 1)
         # add d2 and connect it on-the-fly
         d2 = self.net.addDocker('d2', dimage="ubuntu:trusty")
         self.net.addLink(d2, self.s[0], params1={"ip": "10.0.0.254/8"})
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 2)
+        self.assertTrue(len(self.getContainernetContainers()) == 2)
         self.assertTrue(len(self.net.hosts) == 2)
         # check connectivity by using ping
         self.assertTrue(self.net.ping([self.d[0]], manualdestip="10.0.0.254") <= 0.0)
@@ -268,7 +274,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 2)
+        self.assertTrue(len(self.getContainernetContainers()) == 2)
         self.assertTrue(len(self.net.hosts) == 2)
         self.assertTrue(len(self.net.links) == 2)
         # check connectivity by using ping
@@ -277,7 +283,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         self.net.removeLink(node1=self.d[1], node2=self.s[0])
         self.net.removeDocker(self.d[1])
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 1)
+        self.assertTrue(len(self.getContainernetContainers()) == 1)
         self.assertTrue(len(self.net.hosts) == 1)
         self.assertTrue(len(self.net.links) == 1)
         # check connectivity by using ping (now it should be broken)
@@ -301,7 +307,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 0)
+        self.assertTrue(len(self.getContainernetContainers()) == 0)
         self.assertTrue(len(self.net.hosts) == 1)
         self.assertTrue(len(self.net.links) == 1)
         ### add some containers: d0, d1, d2, d3
@@ -314,7 +320,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         d3 = self.net.addDocker('d3', dimage="ubuntu:trusty")
         self.net.addLink(d3, self.s[0], params1={"ip": "10.0.0.203/8"})
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 4)
+        self.assertTrue(len(self.getContainernetContainers()) == 4)
         self.assertTrue(len(self.net.hosts) == 5)
         self.assertTrue(len(self.net.links) == 5)
         # check connectivity by using ping
@@ -328,7 +334,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         self.net.removeLink(node1=d1, node2=self.s[0])
         self.net.removeDocker(d1)
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 2)
+        self.assertTrue(len(self.getContainernetContainers()) == 2)
         self.assertTrue(len(self.net.hosts) == 3)
         self.assertTrue(len(self.net.links) == 3)
         # check connectivity by using ping
@@ -340,7 +346,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         d4 = self.net.addDocker('d4', dimage="ubuntu:trusty")
         self.net.addLink(d4, self.s[0], params1={"ip": "10.0.0.204/8"})
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 3)
+        self.assertTrue(len(self.getContainernetContainers()) == 3)
         self.assertTrue(len(self.net.hosts) == 4)
         self.assertTrue(len(self.net.links) == 4)
         # check connectivity by using ping
@@ -353,7 +359,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
         self.net.removeLink(node1=d4, node2=self.s[0])
         self.net.removeDocker(d4)
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 0)
+        self.assertTrue(len(self.getContainernetContainers()) == 0)
         self.assertTrue(len(self.net.hosts) == 1)
         self.assertTrue(len(self.net.links) == 1)
         # check connectivity by using ping
@@ -368,7 +374,7 @@ class testDockernetDynamicTopologies( simpleTestTopology ):
 
 
 #@unittest.skip("disabled TCLink tests for development")
-class testDockernetTCLinks( simpleTestTopology ):
+class testContainernetTCLinks( simpleTestTopology ):
     """
     Tests to check TCLinks together with Docker containers.
     """
@@ -386,7 +392,7 @@ class testDockernetTCLinks( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 3)
+        self.assertTrue(len(self.getContainernetContainers()) == 3)
         self.assertTrue(len(self.net.hosts) == 3)
         # check connectivity by using ping: default link
         _, _, res = self.net.pingFull([self.d[0]], manualdestip="10.0.0.2")[0]
@@ -411,7 +417,7 @@ class testDockernetTCLinks( simpleTestTopology ):
         # start Mininet network
         self.startNet()
         # check number of running docker containers
-        self.assertTrue(len(self.getDockerCli().containers()) == 3)
+        self.assertTrue(len(self.getContainernetContainers()) == 3)
         self.assertTrue(len(self.net.hosts) == 3)
         # check connectivity by using ping: default link
         self.assertTrue(self.net.ping(
@@ -424,7 +430,7 @@ class testDockernetTCLinks( simpleTestTopology ):
 
 
 #@unittest.skip("disabled container resource limit tests for development")
-class testDockernetContainerResourceLimitAPI( simpleTestTopology ):
+class testContainernetContainerResourceLimitAPI( simpleTestTopology ):
     """
     Test to check the resource limitation API of the Docker integration.
     TODO: Also check if values are set correctly in to running containers,
